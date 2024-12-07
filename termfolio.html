@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Galitube TermFolio</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Consolas', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #terminal {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        #output {
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .prompt {
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #fff;
+            margin-left: 1px;
+            animation: blink 1s step-end infinite;
+            position: absolute;
+            left: 200px;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        #input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Consolas', monospace;
+            font-size: 16px;
+            flex-grow: 1;
+            outline: none;
+            padding-left: 10px;
+            caret-color: transparent; /* Hides the default cursor */
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .success {
+            color: #fff;
+        }
+
+        .background-text {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            font-size: 16px;
+            left: 200px;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            padding-left: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div id="output">Galitube TermFolio [Version 10.0.26100.2454]
+(c) Galitube GbR. All rights reserved.
+</div>
+        <div class="input-line">
+            <span class="prompt">C:\Galitube\Terminal></span>
+            <span class="cursor"></span>
+            <input type="text" id="input" autofocus>
+            <div class="background-text">Type "help" for more commands</div>
+        </div>
+    </div>
+
+    <script>
+        const commands = {
+            'help': 'Show available commands',
+            'about': 'About me',
+            'skills': 'My skills',
+            'projects': 'My projects',
+            'contact': 'Contact information',
+            'cls': 'Clear screen',
+        };
+
+        const commandResponses = {
+            'about': `Welcome to my Portfolio!
+I am a passionate developer focused on web technologies.
+`,
+            'skills': `My Skills:
+- Frontend: HTML, CSS, JavaScript, React
+- Backend: Node.js, Python
+- Databases: MongoDB, MySQL
+- Tools: Git, Docker
+`,
+            'projects': `My Projects:
+1. TermFolio - Terminal-based Portfolio
+2. WebApp XYZ - A modern Progressive Web App
+3. API Service - RESTful API with Node.js
+`,
+            'contact': `Contact me:
+Email: example@galitube.com
+GitHub: github.com/galitube
+LinkedIn: linkedin.com/in/galitube
+`,
+        };
+
+        const terminal = document.getElementById('terminal');
+        const output = document.getElementById('output');
+        const input = document.getElementById('input');
+        const backgroundText = document.querySelector('.background-text');
+        const cursor = document.querySelector('.cursor');
+
+        input.addEventListener('input', function() {
+            // Show/hide background text based on input
+            backgroundText.style.display = this.value ? 'none' : 'block';
+            // Move cursor based on input width
+            const textWidth = this.value.length * 8; // Approximate width per character
+            cursor.style.left = `${200 + textWidth}px`;
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const command = input.value.toLowerCase().trim();
+                const promptText = document.querySelector('.prompt').textContent;
+                
+                // Add command to output
+                output.innerHTML += `${promptText}${input.value}\n`;
+                
+                // Process command
+                if (command === 'help') {
+                    let helpText = 'Available commands:\n\n';
+                    for (const [cmd, desc] of Object.entries(commands)) {
+                        helpText += `${cmd.padEnd(10)} - ${desc}\n`;
+                    }
+                    output.innerHTML += helpText + '\n';
+                } else if (command === 'cls') {
+                    output.innerHTML = 'Galitube TermFolio [Version 10.0.26100.2454]\n(c) Galitube GbR. All rights reserved.\n\n';
+                } else if (commandResponses[command]) {
+                    output.innerHTML += commandResponses[command] + '\n';
+                } else if (command === '') {
+                    output.innerHTML += '\n';
+                } else {
+                    output.innerHTML += `'${command}' is not recognized as an internal or external command.\nType "help" for a list of available commands.\n\n`;
+                }
+
+                // Scroll to bottom
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                // Clear input and reset cursor
+                input.value = '';
+                cursor.style.left = '200px';
+                // Show background text again
+                backgroundText.style.display = 'block';
+            }
+        });
+
+        // Focus input when clicking anywhere
+        document.addEventListener('click', function() {
+            input.focus();
+        });
+    </script>
+</body>
+</html>
