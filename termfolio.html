@@ -59,7 +59,7 @@
             flex-grow: 1;
             outline: none;
             padding-left: 10px;
-            caret-color: transparent; /* Hides the default cursor */
+            caret-color: transparent;
         }
 
         .error {
@@ -104,7 +104,33 @@
             'projects': 'My projects',
             'contact': 'Contact information',
             'cls': 'Clear screen',
+            'dir': 'List directory contents',
+            'cd': 'Change directory',
+            'mkdir': 'Create a directory',
+            'echo': 'Display messages',
+            'date': 'Show current date and time',
+            'ver': 'Show Windows version',
+            'systeminfo': 'Display system information',
+            'tree': 'Display directory structure',
+            'whoami': 'Display current user',
+            'tasklist': 'Display running processes'
         };
+
+        // Simulierte Dateisystem-Struktur
+        const fileSystem = {
+            'C:': {
+                'Galitube': {
+                    'Terminal': {},
+                    'Documents': {
+                        'readme.txt': 'This is a demo file.',
+                        'projects': {}
+                    },
+                    'Downloads': {}
+                }
+            }
+        };
+
+        let currentPath = ['C:', 'Galitube', 'Terminal'];
 
         const commandResponses = {
             'about': `Welcome to my Portfolio!
@@ -134,51 +160,130 @@ LinkedIn: linkedin.com/in/galitube
         const backgroundText = document.querySelector('.background-text');
         const cursor = document.querySelector('.cursor');
 
+        function getCurrentDirectory() {
+            return currentPath.join('\\') + '>';
+        }
+
+        function updatePrompt() {
+            document.querySelector('.prompt').textContent = getCurrentDirectory();
+        }
+
+        function handleWindowsCommands(command, args) {
+            switch(command) {
+                case 'dir':
+                    return `
+ Directory of ${getCurrentDirectory()}
+
+12/09/2024  10:00 AM    <DIR>          .
+12/09/2024  10:00 AM    <DIR>          ..
+12/09/2024  10:00 AM    <DIR>          Documents
+12/09/2024  10:00 AM    <DIR>          Downloads
+12/09/2024  10:00 AM             1,024 readme.txt
+               1 File(s)          1,024 bytes
+               4 Dir(s)  255,123,456,789 bytes free
+`;
+                case 'cd':
+                    if (!args[0] || args[0] === '.') return '';
+                    if (args[0] === '..') {
+                        if (currentPath.length > 1) {
+                            currentPath.pop();
+                            updatePrompt();
+                        }
+                        return '';
+                    }
+                    currentPath.push(args[0]);
+                    updatePrompt();
+                    return '';
+                case 'mkdir':
+                    if (!args[0]) return 'Error: Directory name not specified\n';
+                    return `Created directory ${args[0]}\n`;
+                case 'echo':
+                    return args.join(' ') + '\n';
+                case 'date':
+                    return new Date().toLocaleString() + '\n';
+                case 'ver':
+                    return 'Microsoft Windows [Version 10.0.26100.2454]\n';
+                case 'systeminfo':
+                    return `
+Host Name:                 DESKTOP-DEMO
+OS Name:                   Microsoft Windows 10 Pro
+OS Version:                10.0.26100 Build 2454
+System Manufacturer:       Demo Corp
+System Model:             Virtual Machine
+System Type:              x64-based PC
+Processor(s):             1 Processor(s) Installed
+Memory:                   16,384 MB RAM
+`;
+                case 'tree':
+                    return `
+Folder PATH listing
+C:.
+├───Galitube
+│   ├───Terminal
+│   ├───Documents
+│   └───Downloads
+`;
+                case 'whoami':
+                    return 'desktop-demo\\demo-user\n';
+                case 'tasklist':
+                    return `
+Image Name                     PID    Memory
+========================= ======== ============
+System Idle Process              0         8 K
+System                          4     1,432 K
+Registry                       96    48,056 K
+smss.exe                      384     1,168 K
+csrss.exe                     528    27,320 K
+`;
+                default:
+                    return null;
+            }
+        }
+
         input.addEventListener('input', function() {
-            // Show/hide background text based on input
             backgroundText.style.display = this.value ? 'none' : 'block';
-            // Move cursor based on input width
-            const textWidth = this.value.length * 8; // Approximate width per character
+            const textWidth = this.value.length * 8;
             cursor.style.left = `${200 + textWidth}px`;
         });
 
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                const command = input.value.toLowerCase().trim();
-                const promptText = document.querySelector('.prompt').textContent;
+                const fullCommand = input.value.trim();
+                const args = fullCommand.split(' ');
+                const command = args[0].toLowerCase();
+                args.shift();
                 
-                // Add command to output
+                const promptText = document.querySelector('.prompt').textContent;
                 output.innerHTML += `${promptText}${input.value}\n`;
                 
-                // Process command
                 if (command === 'help') {
                     let helpText = 'Available commands:\n\n';
                     for (const [cmd, desc] of Object.entries(commands)) {
-                        helpText += `${cmd.padEnd(10)} - ${desc}\n`;
+                        helpText += `${cmd.padEnd(15)} - ${desc}\n`;
                     }
                     output.innerHTML += helpText + '\n';
                 } else if (command === 'cls') {
                     output.innerHTML = 'Galitube TermFolio [Version 10.0.26100.2454]\n(c) Galitube GbR. All rights reserved.\n\n';
                 } else if (commandResponses[command]) {
                     output.innerHTML += commandResponses[command] + '\n';
-                } else if (command === '') {
-                    output.innerHTML += '\n';
                 } else {
-                    output.innerHTML += `'${command}' is not recognized as an internal or external command.\nType "help" for a list of available commands.\n\n`;
+                    const windowsResponse = handleWindowsCommands(command, args);
+                    if (windowsResponse !== null) {
+                        output.innerHTML += windowsResponse;
+                    } else if (command !== '') {
+                        output.innerHTML += `'${command}' is not recognized as an internal or external command.\nType "help" for a list of available commands.\n\n`;
+                    } else {
+                        output.innerHTML += '\n';
+                    }
                 }
 
-                // Scroll to bottom
                 terminal.scrollTop = terminal.scrollHeight;
-                
-                // Clear input and reset cursor
                 input.value = '';
                 cursor.style.left = '200px';
-                // Show background text again
                 backgroundText.style.display = 'block';
             }
         });
 
-        // Focus input when clicking anywhere
         document.addEventListener('click', function() {
             input.focus();
         });
